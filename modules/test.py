@@ -42,12 +42,12 @@ db.create_inventor(inventor)
 invention = Invention()
 invention.name = 'Kontaktní čočka'
 invention.inventor = 1
-invention.category = 1
+invention.category.append(category)
 db.create_invention(invention)
 
 invention2 = Invention()
 invention2.name = 'test'
-invention2.category = 1
+# invention2.category.append(category)
 db.create_invention(invention2)
 
 
