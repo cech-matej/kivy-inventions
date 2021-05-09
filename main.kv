@@ -1,0 +1,151 @@
+#:import utils kivy.utils
+
+BoxLayout:
+    orientation:'vertical'
+
+    MDToolbar:
+        title: 'Databáze vynálezců'
+        #md_bg_color: .8, .2, .2, 1
+        md_bg_color: utils.get_color_from_hex('0b132b')
+        specific_text_color: 1, 1, 1, 1
+
+    #MDTabs:
+    #    id: tabs
+    #    on_tab_switch: app.on_tab_switch(*args)
+
+    MDTabs:
+        background_color: utils.get_color_from_hex('6fffe9')
+        id: tabs
+        Tab:
+            id: tab_inventors
+            title: "Vynálezci"
+
+            InventorScreen:
+        Tab:
+            id: tab_nations
+            title: "Státy"
+
+            NationScreen:
+        Tab:
+            id: tab_inventions
+            title: "Vynálezy"
+
+            InventionScreen
+
+    #MDBottomNavigation:
+    #    id: navigation
+    #    panel_color: .8, .8, .4, 1
+
+    #    MDBottomNavigationItem:
+    #        name: 'screen 1'
+    #        text: 'Osobní databáze'
+    #        icon: 'card-bulleted'
+
+    #        InventorScreen:
+
+
+    #    MDBottomNavigationItem:
+    #        name: 'screen 2'
+    #        text: 'BMI'
+    #        icon: 'text'
+
+    #        BMIScreen:
+
+#<Tab>
+#    MDLabel:
+#        id: inventor_label
+#        text: "Inventors"
+#        halign: "center"
+
+<InventorScreen>
+    name:'inventorscreen'
+
+    #MDTabs:
+    #    id: tabs
+    #    Tab:
+    #        title: "Vynálezci"
+    #    Tab:
+    #        title: "Státy"
+
+
+#<Tabs>:
+#    MDTabs:
+#        Tab:
+#            title: "Vynálezci"
+#        Tab:
+#            title: "Státy"
+
+
+<NationScreen>
+    name: 'nationscreen'
+
+
+<InventorContent>:
+    orientation: 'vertical'
+    size_hint_x: 1
+    size_hint_y: None
+    height: "150dp"
+
+    MDTextField:
+        id: inventor_first_name
+        text: 'Křestní jméno vynálezce'
+        hint_text: 'Křestní jméno'
+        pos_hint: {'center_x': .5, 'center_y': .9}
+
+    MDTextField:
+        id: inventor_last_name
+        text: 'Příjmení vynálezce'
+        hint_text: 'Příjmení'
+        pos_hint: {'center_x': .5, 'center_y': .8}
+
+    MDDropDownItem:
+        id: nation_item
+        pos_hint: {'center_x': .5, 'center_y': .7}
+        size_hint_x: 1
+        text: 'Stát'
+        on_release: self.parent.menu_states.open()
+
+    MDRectangleFlatButton:
+        id: inventor_birthday
+        text: "Datum narození"
+        pos_hint: {'center_x': .5, 'center_y': .5}
+        theme_text_color: "Custom"
+        text_color: 0, 0, 1, 1
+        line_color: 0, 0, 1, 1
+
+<NationContent>:
+    orientation: 'vertical'
+    size_hint_x: 1
+    size_hint_y: None
+    height: "100dp"
+
+    MDTextField:
+        id: nation_abbr
+        text: 'Zkratka státu'
+        hint_text: 'Zkratka státu'
+        pos_hint: {'center_x': .5, 'center_y': .9}
+
+    MDTextField:
+        id: nation_name
+        text: 'Celý název státu'
+        hint_text: 'Celý název státu'
+        pos_hint: {'center_x': .5, 'center_y': .7}
+
+
+<InventionContent>:
+    orientation: 'vertical'
+    size_hint_x: 1
+    size_hint_y: None
+    height: "100dp"
+
+    MDTextField:
+        id: invention_name
+        text: 'Název vynálezu'
+        hint_text: 'Název vynálezu'
+        pos_hint: {'center_x': .5, 'center_y': .9}
+
+    MDTextField:
+        id: invention_description
+        text: 'Popis vynálezu'
+        hint_text: 'Popis vynálezu'
+        pos_hint: {'center_x': .5, 'center_y': .7}

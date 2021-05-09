@@ -228,6 +228,22 @@ class Database:
             print(e.__traceback__.tb_frame)
             return False
 
+    def read_nation_id_by_abbr(self, name):
+        try:
+            result = self.session.query(Nation).filter(Nation.abbr.like(f'{name}')).one().id
+            return result
+        except Exception as e:
+            print(e.__traceback__.tb_frame)
+            return False
+
+    def read_nation_abbr_by_id(self, idx):
+        try:
+            result = self.session.query(Nation).get(idx).abbr
+            return result
+        except Exception as e:
+            print(e.__traceback__.tb_frame)
+            return False
+
     def read_categories(self, order=Category.name):
         try:
             result = self.session.query(Category).order_by(order).all()
