@@ -1,4 +1,7 @@
 # Import aplikačního
+import os
+import uuid
+
 from kivy.app import App
 # Importy Kivy komponent
 from kivy.uix.boxlayout import BoxLayout
@@ -14,52 +17,32 @@ from modules.db import Database, Inventor, Nation, Invention, Category
 from kivymd.uix.picker import MDDatePicker
 
 
-# # Třída se stará o vytvoření obsahu dialogového okna pro vložení nového státu do databáze
-# class NationContent(BoxLayout):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(**kwargs)
-#
-#
-# # Třída vytvářející dialogové okno pro vložení nového státu
-# class NationDialog(MDDialog):
-#     def __init__(self, *args, **kwargs):
-#         # Nastavení parametrů dialogového okna
-#         super(NationDialog, self).__init__(
-#             # Dialogové okno s uživatelským obsahem
-#             type="custom",
-#             # Vytvoření objektu s uživatelským obsahem (podle třídy StateContent)
-#             content_cls=NationContent(),
-#             title='Nový stát',
-#             size_hint=(.8, 1),
-#             # Vytvoření tlačítek s odkazy na ohlasové metody
-#             buttons=[
-#                 MDFlatButton(text='Uložit', on_release=self.save_dialog),
-#                 MDFlatButton(text='Zrušit', on_release=self.cancel_dialog)
-#             ]
-#         )
-#
-#     # Implementace ohlasových metod
-#     # Uložení nového záznamu státu
-#     def save_dialog(self, *args):
-#         # Vytvoření nového datového objektu státu
-#         state = Nation()
-#         # Uložení údajů o novém státu podle prvků dialogového okna
-#         state.abbr = self.content_cls.ids.nation_abbr.text
-#         state.name = self.content_cls.ids.nation_name.text
-#         # Vytvoření nového státu v databázi
-#         app.inventors.database.create_nation(state)
-#         # Zavření dialogového okna
-#         self.dismiss()
-#
-#     # Zavření dialogového okna bez uložení
-#     def cancel_dialog(self, *args):
-#         self.dismiss()
-#
+# ----------------------------------------------
+
+from kivy.uix.floatlayout import FloatLayout
+from kivy.properties import ObjectProperty
+from kivy.uix.popup import Popup
+from kivy.uix.button import Button
+from kivy.uix.label import Label
+from shutil import copyfile
+
+from PIL import Image
+
+
+class LoadDialog(FloatLayout):
+    load = ObjectProperty(None)
+    cancel = ObjectProperty(None)
+
+# ----------------------------------------------
+
 
 # Třída se stará o vytvoření obsahu dialogového okna pro vytvoření / editaci osob
 class InventorContent(BoxLayout):
     def __init__(self, id, *args, **kwargs):
         super().__init__(**kwargs)
+
+        self.predane_id = id
+
         # Jestliže již existuje id osoby (předané jako parametr)
         if id:
             # Do proměnné person se načtou údaje z daného databázového objektu (vybrán podle id)
@@ -68,6 +51,7 @@ class InventorContent(BoxLayout):
         else:
             # Když id neexistuje, do proměnné person se vloží výchozí hodnoty (nový záznam)
             inventor = {"id": "", "first_name": "", "last_name": "", "nation_id": "Stát"}
+            # inventor = {"id": "", "first_name": "", "last_name": "", "nation_id": "Stát", "photo": ""}
 
         print(inventor)
 
@@ -102,6 +86,12 @@ class InventorContent(BoxLayout):
         birthday_button = self.ids.inventor_birthday
         birthday_button.on_release = self.show_date_picker
 
+        img_button = self.ids.inventor_img
+        if id:
+            img_button.on_release = self.show_load
+        else:
+            img_button.on_release = self.nono
+
     def on_save(self, instance, value, date_range):
         print(value)
         ''' DATUM SE ZATÍM NIKAM NEUKLÁDÁ, POUZE SE VYPISUJE DO KONZOLE '''
@@ -121,6 +111,47 @@ class InventorContent(BoxLayout):
         self.ids.nation_item.text = text_item
         # Uzavření menu
         self.menu_states.dismiss()
+
+    # File chooser
+    def load(self, path, filename):
+        with open(os.path.join(path, filename[0])):
+            ext = filename[0].split('.')[-1]
+            # file_name = "%s.%s" % (uuid.uuid4(), ext)
+            file_name = "%s.%s" % (self.predane_id, ext)
+            destination = os.path.join('gallery', file_name)
+            copyfile(os.path.join(path, filename[0]), destination)
+
+            if ext != "jpg":
+                im = Image.open(f"gallery/{file_name}")
+                im_conv = im.convert('RGB')
+                im_conv.save(f"gallery/{self.predane_id}.jpg")
+
+            # print("%s.%s" % (self.predane_id, ext))
+
+        # inventor = vars(app.inventors.database.read_inventor_by_id(self.predane_id))
+        # inventor['photo'] = file_name
+        # app.inventors.update(inventor)
+
+        # print(inventor)
+        print(file_name)
+
+        self._popup.dismiss()
+        # app.inventors.rewrite_list()
+
+    def dismiss_popup(self):
+        self._popup.dismiss()
+
+    def show_load(self):
+        cont = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self._popup = Popup(title="Výběr obrázku", content=cont, size_hint=(0.9, 0.9))
+        self._popup.open()
+
+    def nono(self):
+        # cont = Label(text="Nejdřív musíte vynálezce přidat do databáze, poté nastavit obrázek")
+        cont = Button(text="Zavřít")
+        popup = Popup(content=cont, size_hint=(0.8, 0.2), title="Nejdřív musíte vynálezce přidat do databáze, poté nastavit obrázek")
+        cont.bind(on_press=popup.dismiss)
+        popup.open()
 
 
 # Třída umožní vytvořit dialogové okno k editaci osobních údajů
@@ -180,9 +211,16 @@ class MyItem(TwoLineAvatarIconListItem):
         self.image = ImageLeftWidget()
         # Vlajky jsou umístěny ve složce images
         if item['photo'] is None:
-            self.image.source = f"img/profile.jpg"
+            path_to_img = f"gallery/{item['id']}.jpg"
+            if os.path.isfile(path_to_img):
+                self.image.source = f"gallery/{item['id']}.jpg"
+
+            else:
+                self.image.source = f"img/profile.jpg"
+
         else:
-            self.image.source = f"images/inventors/{item['id']}.png"
+            # self.image.source = f"images/inventors/{item['id']}.png"
+            self.image.source = f"gallery/{item['photo']}"
         self.add_widget(self.image)
         # Vložení ikony pro vymazání osoby ze seznamu
         self.icon = IconRightWidget(icon="delete", on_release=self.on_delete)
@@ -244,34 +282,14 @@ class Inventors(BoxLayout):
         self.add_widget(scrollview)
         # Vytvoření nového boxu pro tlačítka Nová osoba a Nový stát
         button_box = BoxLayout(orientation='horizontal', size_hint_y=0.1)
-        # Přidání tlačítka pro vložení nové osoby
-        # new_person_btn = MDFillRoundFlatIconButton()
-        # new_person_btn.text = "Nová osoba"
-        # new_person_btn.icon = "plus"
-        # new_person_btn.icon_color = [0.9, 0.9, 0.9, 1]
-        # new_person_btn.text_color = [0.9, 0.9, 0.9, 1]
-        # new_person_btn.md_bg_color = [0, 0.5, 0.8, 1]
-        # new_person_btn.font_style = "Button"
-        # new_person_btn.pos_hint = {"center_x": .5}
-        # new_person_btn.on_release = self.on_create_inventor
-        # button_box.add_widget(new_person_btn)
+
         new_inventor_btn = MDFloatingActionButton()
         new_inventor_btn.icon = "plus"
         new_inventor_btn.md_bg_color = [0, 0.5, 0.8, 1]
         new_inventor_btn.pos_hint = {"center_x": .5}
         new_inventor_btn.on_release = self.on_create_inventor
         button_box.add_widget(new_inventor_btn)
-        # Přidání tlačítka pro vložení nového státu
-        # new_state_btn = MDFillRoundFlatIconButton()
-        # new_state_btn.text = "Nový stát"
-        # new_state_btn.icon = "plus"
-        # new_state_btn.icon_color = [0.9, 0.9, 0.9, 1]
-        # new_state_btn.text_color = [0.9, 0.9, 0.9, 1]
-        # new_state_btn.md_bg_color = [0.8, 0.5, 0, 1]
-        # new_state_btn.font_style = "Button"
-        # new_state_btn.pos_hint = {"center_x": .6}
-        # new_state_btn.on_release = self.on_create_state
-        # button_box.add_widget(new_state_btn)
+
         self.add_widget(button_box)
 
     def rewrite_list(self):
@@ -310,6 +328,7 @@ class Inventors(BoxLayout):
         create_inventor.last_name = inventor['last_name']
         # create_inventor.nation_id = inventor['nation_id']
         create_inventor.nation_id = app.inventors.database.read_nation_id_by_abbr(inventor['nation_id'])
+        # create_inventor.photo = inventor['photo']
         self.database.create_inventor(create_inventor)
         self.rewrite_list()
 
@@ -321,6 +340,7 @@ class Inventors(BoxLayout):
         update_inventor.first_name = inventor['first_name']
         update_inventor.last_name = inventor['last_name']
         update_inventor.nation_id = app.inventors.database.read_nation_id_by_abbr(inventor['nation_id'])
+        # update_inventor.photo = inventor['photo']
         self.database.update()
         self.rewrite_list()
 

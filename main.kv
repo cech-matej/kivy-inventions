@@ -84,7 +84,7 @@ BoxLayout:
     orientation: 'vertical'
     size_hint_x: 1
     size_hint_y: None
-    height: "150dp"
+    height: "200dp"
 
     MDTextField:
         id: inventor_first_name
@@ -105,13 +105,22 @@ BoxLayout:
         text: 'Stát'
         on_release: self.parent.menu_states.open()
 
-    MDRectangleFlatButton:
-        id: inventor_birthday
-        text: "Datum narození"
-        pos_hint: {'center_x': .5, 'center_y': .5}
-        theme_text_color: "Custom"
-        text_color: 0, 0, 1, 1
-        line_color: 0, 0, 1, 1
+    BoxLayout:
+        MDRectangleFlatButton:
+            id: inventor_birthday
+            text: "Datum narození"
+            #pos_hint: {'center_x': .5, 'center_y': .5}
+            theme_text_color: "Custom"
+            text_color: 0, 0, 1, 1
+            line_color: 0, 0, 1, 1
+
+        MDRectangleFlatButton:
+            id: inventor_img
+            text: "Obrázek"
+            #pos_hint: {'center_x': .5, 'center_y': .5}
+            theme_text_color: "Custom"
+            text_color: 0, 0, 1, 1
+            line_color: 0, 0, 1, 1
 
 <NationContent>:
     orientation: 'vertical'
@@ -149,3 +158,25 @@ BoxLayout:
         text: 'Popis vynálezu'
         hint_text: 'Popis vynálezu'
         pos_hint: {'center_x': .5, 'center_y': .7}
+
+
+
+<LoadDialog>:
+    BoxLayout:
+        size: root.size
+        pos: root.pos
+        orientation: "vertical"
+
+        FileChooserListView:
+            id: filechooser
+
+        BoxLayout:
+            size_hint_y: None
+            height: 30
+            Button:
+                text: "Zrušit"
+                on_release: root.cancel()
+
+            Button:
+                text: "Vybrat"
+                on_release: root.load(filechooser.path, filechooser.selection)

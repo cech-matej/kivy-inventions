@@ -1,3 +1,5 @@
+import os.path
+
 from kivy.uix.screenmanager import Screen
 from kivymd.app import MDApp
 from kivy.lang import Builder
@@ -39,6 +41,8 @@ class Tab(MDFloatLayout, MDTabsBase):
 
 
 class InventorsApp(MDApp):
+    root_path = os.path.dirname(os.path.realpath(__file__))
+
     def build(self):
         self.title = "Why is Kivy so broken?"
         self.icon = 'img/icon256.png'
